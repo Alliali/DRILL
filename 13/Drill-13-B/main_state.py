@@ -5,6 +5,7 @@ import os
 from pico2d import *
 import game_framework
 import game_world
+import server
 
 from boy import Boy
 from grass import Grass
@@ -13,38 +14,19 @@ from brick import Brick
 
 name = "MainState"
 
-boy = None
-grass = None
-balls = []
-brick = None
-
-def collide(a, b):
-    # fill here
-    left_a, bottom_a, right_a, top_a = a.get_bb()
-    left_b, bottom_b, right_b, top_b = b.get_bb()
-
-    if left_a > right_b: return False
-    if right_a < left_b: return False
-    if top_a < bottom_b: return False
-    if bottom_a > top_b: return False
-
-    return True
-
-
 
 
 def enter():
-    global boy
-    boy = Boy()
-    game_world.add_object(boy, 1)
+    server.boy = Boy()
+    game_world.add_object(server.boy, 1)
 
-    global grass
-    grass = Grass()
-    game_world.add_object(grass, 0)
+    server.grass = Grass()
+    game_world.add_object(server.grass, 0)
 
-    global bricks
-    bricks = [Brick(300+300*i, 100+50*i) for i in range(5)]
-    game_world.add_objects(bricks, 1)
+    # server.bricks = [Brick(300+300*i, 100+50*i) for i in range(1)]
+    server.bricks = [Brick(300 + 300 * i, 100 + 50 * i) for i in range(5)]
+    game_world.add_objects(server.bricks, 1)
+
 
 
 
@@ -67,23 +49,16 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
                 game_framework.quit()
         else:
-            boy.handle_event(event)
+            server.boy.handle_event(event)
 
 
 def update():
     for game_object in game_world.all_objects():
         game_object.update()
-
-    for ball in balls.copy():
-        if collide(ball, grass):
-            ball.stop()
-        if collide(ball, boy):
-            balls.remove(ball)
-            game_world.remove_object(ball)
-    for brick in bricks:
-        if collide(boy, brick):
-            print('stop')
-            boy.keep()
+    # for brick in server.bricks:
+    #     if collide(server.boy, brick):
+    #         print('stop')
+    #         server.boy.keep()
 
 def draw():
     clear_canvas()

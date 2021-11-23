@@ -4,6 +4,8 @@ from ball import Ball
 from brick import Brick
 
 import game_world
+import server
+import collision
 
 # Boy Run Speed
 PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
@@ -136,6 +138,9 @@ class Boy:
         self.cur_state = IdleState
         self.cur_state.enter(self, None)
 
+        self.parent = None #발판에 속해있지 않다.
+
+
     def get_bb(self):
         # fill here
         return self.x - 30, self.y - 30, self.x + 30, self.y + 50
@@ -159,7 +164,14 @@ class Boy:
             self.cur_state.exit(self, event)
             self.cur_state = next_state_table[self.cur_state][event]
             self.cur_state.enter(self, event)
+        if self.parent: #소년이 발판에 붙어있으면
+            self.x += self.parent.speed * game_framework.frame_time
+            self.x = clamp(self.parent.x - 80, self.x, self.parent.x + 80)
 
+        for brick in server.bricks: #백만번 반복
+            if collision.collide(self, brick):
+                self.set_parent(brick)
+                break   #이미 지나간 충돌체크는 안한다
 
     def draw(self):
         self.cur_state.draw(self)
@@ -172,3 +184,7 @@ class Boy:
             key_event = key_event_table[(event.type, event.key)]
             self.add_event(key_event)
 
+    def set_parent(self, brick):
+        self.parent = brick
+        # 소년의 초기 위치를, 발판의 특정 위치로 가게 한다
+        self.x, self.y = brick.x + brick.BOY_X0, brick.y + brick.BOY_Y0
